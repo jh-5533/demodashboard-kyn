@@ -1,47 +1,19 @@
 import { NextResponse } from 'next/server'
+import { MOCK_OUTBOUND_HISTORY } from '@/lib/mock-data'
 
-const SB_URL = 'https://ctjapwjpwkvxubdmzbqg.supabase.co'
+const MOCK_COMPANIES = [
+  { id: 'c1', company_name: 'Pacific Rim Logistics', domain: 'pacrimlog.sg', linkedin_url: 'https://linkedin.com/company/pacrimlog', industry: 'Logistics', source_rank: 1 },
+  { id: 'c2', company_name: 'Apex Marine Services', domain: 'apexmarine.sg', linkedin_url: 'https://linkedin.com/company/apexmarine', industry: 'Maritime', source_rank: 2 },
+  { id: 'c3', company_name: 'SunBridge Capital', domain: 'sunbridgecap.sg', linkedin_url: 'https://linkedin.com/company/sunbridgecap', industry: 'Financial Services', source_rank: 3 },
+]
 
-function sbHeaders() {
-  const k = process.env.SUPABASE_SERVICE_KEY
-  if (!k) throw new Error('SUPABASE_SERVICE_KEY not set')
-  return {
-    apikey:        k,
-    Authorization: `Bearer ${k}`,
-    'Content-Type': 'application/json',
-  }
-}
+const MOCK_PEOPLE = [
+  { id: 'p1', full_name: 'Jonathan Lim', title: 'CFO', email: 'jonathan.lim@pacrimlog.sg', linkedin_url: 'https://linkedin.com/in/jonathan-lim-cfo' },
+  { id: 'p2', full_name: 'Serena Tan', title: 'Operations Director', email: 'serena.tan@apexmarine.sg', linkedin_url: 'https://linkedin.com/in/serena-tan-ops' },
+]
 
-// GET /api/outbound/history           → search log (last 30 days)
-// GET /api/outbound/history?id=<uuid> → companies + people for that search
 export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url)
-    const id = searchParams.get('id')
-
-    if (id) {
-      const [compRes, peopleRes] = await Promise.all([
-        fetch(`${SB_URL}/rest/v1/ob_company_dump?search_id=eq.${id}&order=source_rank.asc`, { headers: sbHeaders() }),
-        fetch(`${SB_URL}/rest/v1/ob_people_dump?search_id=eq.${id}&order=created_at.asc`,   { headers: sbHeaders() }),
-      ])
-      const companies = compRes.ok   ? await compRes.json()   : []
-      const people    = peopleRes.ok ? await peopleRes.json() : []
-      return NextResponse.json({
-        companies: Array.isArray(companies) ? companies : [],
-        people:    Array.isArray(people)    ? people    : [],
-      })
-    }
-
-    // Return last 30 days of searches
-    const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
-    const res = await fetch(
-      `${SB_URL}/rest/v1/ob_search_log?created_at=gte.${cutoff}&order=created_at.desc&limit=100`,
-      { headers: sbHeaders() }
-    )
-    const rows = res.ok ? await res.json() : []
-    return NextResponse.json(Array.isArray(rows) ? rows : [])
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Server error'
-    return NextResponse.json({ error: msg }, { status: 500 })
-  }
+  const id = new URL(req.url).searchParams.get('id')
+  if (id) return NextResponse.json({ companies: MOCK_COMPANIES, people: MOCK_PEOPLE })
+  return NextResponse.json(MOCK_OUTBOUND_HISTORY)
 }

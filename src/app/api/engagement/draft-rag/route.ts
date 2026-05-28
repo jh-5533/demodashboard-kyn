@@ -1,66 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { runRagDraft } from '@/lib/run-rag-draft'
+import { NextResponse } from 'next/server'
 
-const SB_URL = 'https://ctjapwjpwkvxubdmzbqg.supabase.co'
+const MOCK_RAG_DRAFT = `Based on our knowledge base, here is a tailored draft response:
 
-function sbHeaders(prefer = 'return=representation') {
-  const k = process.env.SUPABASE_SERVICE_KEY
-  if (!k) throw new Error('SUPABASE_SERVICE_KEY not set')
-  return { apikey: k, Authorization: `Bearer ${k}`, 'Content-Type': 'application/json', Prefer: prefer }
+Thank you for your message. I have reviewed your requirements against our current product portfolio and market terms.
+
+Based on the information provided, I can confirm that we have suitable coverage options available. I will prepare a formal proposal incorporating the specific limits and deductible structures that align with your risk profile.
+
+You can expect the proposal in your inbox within 2 business days.
+
+Best regards,
+Trade Risk Solutions
+
+[Sources: TRS_Product_Guide_2026.pdf, Trade_Credit_Underwriting_Guide.pdf]`
+
+export async function POST() {
+  return NextResponse.json({ id: `rag-draft-${Date.now()}`, content: MOCK_RAG_DRAFT, sources: [{ file_name: 'TRS_Product_Guide_2026.pdf', similarity: 0.91 }, { file_name: 'Trade_Credit_Underwriting_Guide.pdf', similarity: 0.84 }], created_at: new Date().toISOString() })
 }
 
-// POST — generate a RAG draft for a thread on demand
-export async function POST(req: NextRequest) {
-  try {
-    const { thread_id, message_id } = await req.json()
-    if (!thread_id) return NextResponse.json({ error: 'thread_id required' }, { status: 400 })
-
-    await runRagDraft(thread_id, message_id ?? null)
-
-    // Return the freshly created draft + sources
-    const draftRes = await fetch(
-      `${SB_URL}/rest/v1/rag_thread_drafts?thread_id=eq.${thread_id}&order=created_at.desc&limit=1&select=id,content,created_at`,
-      { headers: sbHeaders() }
-    )
-    const drafts = draftRes.ok ? await draftRes.json() : []
-    const draft  = Array.isArray(drafts) ? drafts[0] : null
-    if (!draft) return NextResponse.json({ error: 'Draft not found after generation' }, { status: 500 })
-
-    const srcRes = await fetch(
-      `${SB_URL}/rest/v1/rag_draft_sources?draft_id=eq.${draft.id}&order=similarity.desc`,
-      { headers: sbHeaders() }
-    )
-    const sources = srcRes.ok ? await srcRes.json() : []
-
-    return NextResponse.json({ ...draft, sources: Array.isArray(sources) ? sources : [] })
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Server error'
-    return NextResponse.json({ error: msg }, { status: 500 })
-  }
-}
-
-// GET — fetch latest RAG draft + sources for a thread
-export async function GET(req: NextRequest) {
-  const thread_id = req.nextUrl.searchParams.get('thread_id')
-  if (!thread_id) return NextResponse.json({ error: 'thread_id required' }, { status: 400 })
-
-  try {
-    const draftRes = await fetch(
-      `${SB_URL}/rest/v1/rag_thread_drafts?thread_id=eq.${thread_id}&order=created_at.desc&limit=1&select=id,content,created_at`,
-      { headers: sbHeaders() }
-    )
-    const drafts = draftRes.ok ? await draftRes.json() : []
-    const draft  = Array.isArray(drafts) ? drafts[0] : null
-    if (!draft) return NextResponse.json(null)
-
-    const srcRes = await fetch(
-      `${SB_URL}/rest/v1/rag_draft_sources?draft_id=eq.${draft.id}&order=similarity.desc`,
-      { headers: sbHeaders() }
-    )
-    const sources = srcRes.ok ? await srcRes.json() : []
-
-    return NextResponse.json({ ...draft, sources: Array.isArray(sources) ? sources : [] })
-  } catch (e) {
-    return NextResponse.json({ error: String(e) }, { status: 500 })
-  }
+export async function GET() {
+  return NextResponse.json(null)
 }

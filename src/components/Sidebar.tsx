@@ -10,7 +10,6 @@ import {
   Bot, SlidersHorizontal, Table2, UsersRound,
   LogOut, BookOpen, Cpu, FolderOpen,
 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 
 type InboundCounts = { emailNew: number; waNew: number }
 type StageCounts   = { engaged: number; qualified: number; proposal: number; converted: number }
@@ -51,7 +50,7 @@ export default function Sidebar() {
   const [captureOpen,  setCaptureOpen]  = useState(true)
   const [outboundOpen, setOutboundOpen] = useState(true)
   const [engageOpen,   setEngageOpen]   = useState(true)
-  const [userEmail,   setUserEmail]   = useState<string | null>(null)
+  const userEmail = 'demo@boomhaus.sg'
 
   useEffect(() => {
     const load = () => {
@@ -63,13 +62,8 @@ export default function Sidebar() {
     return () => clearInterval(t)
   }, [])
 
-  useEffect(() => {
-    createClient().auth.getUser().then(({ data }) => setUserEmail(data.user?.email ?? null))
-  }, [])
-
-  async function signOut() {
-    await createClient().auth.signOut()
-    router.push('/login')
+  function signOut() {
+    router.push('/overview')
   }
 
   function active(href: string) {
