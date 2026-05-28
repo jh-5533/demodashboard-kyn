@@ -101,11 +101,11 @@ export default function Sidebar() {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           flexShrink: 0,
         }}>
-          <span style={{ fontSize: 10, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em' }}>TRS</span>
+          <span style={{ fontSize: 10, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em' }}>KYN</span>
         </span>
         <div style={{ minWidth: 0, flex: 1 }}>
           <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: '#111', letterSpacing: '-0.01em', lineHeight: 1.2 }}>
-            Trade Risk Solutions
+            KYN Demo
           </p>
           <p style={{ margin: 0, fontSize: 11, color: '#999', lineHeight: 1.3 }}>Internal Dashboard</p>
         </div>
